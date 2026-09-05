@@ -1,7 +1,6 @@
 # Virtual Screening Pharmacophore
 
-> **Domain:** Clinical Decision Support & Biomedical Computing  
-> **Reference Guidelines & Standards:** `Standard Clinical Formulations & ISO/IEC Quality Frameworks`
+> **Domain:** Clinical Decision Support & Biomedical Computing / Computational Chemistry & AI Drug Discovery
 
 <div align="center">
 
@@ -16,84 +15,183 @@
 
 ---
 
-## 📖 What It Does
+## Overview
 
-**Virtual Screening Pharmacophore** is an advanced analytical and computational platform implementing 3D spatial pharmacophore feature alignment & candidate library screening agent.
+**Virtual Screening Pharmacophore** is a dual-domain analytical platform combining clinical decision support with 3D pharmacophore feature alignment and candidate library screening. The system provides:
 
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-- **Deterministic Calculation Engine**: Strict compliance with standard reference formulations and thresholds.
-- **Risk & Urgency Classification**: Multi-tier categorization with automated clinical/operational action recommendations.
-- **Validation & Guardrails**: Rigorous input bounds checking and anomaly detection.
+- **Clinical & Biomedical AI** (`agents/`): Multi-worker evaluation with HMAC-SHA256 tamper-evident audit trails and Zero-PHI outbound protection.
+- **PharmacoScreen Engine** (`pharmaco_screen/`): 3D pharmacophore feature alignment and database screening agent following IUPAC Pharmacophore Modeling Guidelines.
+- **Enrichment Suite** (`enrichment.py`): Modular engines for visualization, implementation, dependencies, testing, and fragment-based drug design workflows.
 
 ---
 
-## 💻 CLI Quickstart & Usage
+## Quick Start
 
-### 1. Guided Interactive Mode
+### Prerequisites
+
+- Python 3.9+
+- pip
+
+### Installation
+
 ```bash
-python cli.py
+# Clone the repository
+git clone https://github.com/abusuraihsakhri/virtual-screening-pharmacophore.git
+cd virtual-screening-pharmacophore
+
+# Install in development mode
+pip install -e .
+
+# Or install with optional web server dependencies
+pip install -e ".[web]"
 ```
 
-### 2. Direct Parameterized Evaluation
+### Environment Configuration
+
+The audit trail requires a secret key to be set:
+
 ```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
+# Generate a secure key
+export AUDIT_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
 ```
 
-### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
-
-### Input Data Schema
-
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `task_id` | Parameter / observation metric | Required |
-| `target_identifier` | Parameter / observation metric | Required |
-| `primary_metric` | Parameter / observation metric | Required |
-| `secondary_metric` | Parameter / observation metric | Required |
-| `is_critical_flag` | Parameter / observation metric | Required |
-| `status_descriptor` | Parameter / observation metric | Required |
-
 ---
 
-## 🛡️ Security & Enterprise Architecture
+## Usage
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+### CLI Commands
 
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+The package provides a unified CLI via `cli.py`:
 
 ```bash
+# Run a single audit evaluation
+python cli.py audit --task-id TASK-01 --target KEY-01 --primary 28.5 --secondary 14.2
+
+# Query the supervisory chat
+python cli.py chat "What is the system status?"
+
+# Batch process a CSV file
+python cli.py batch -i sample.csv -o results.csv
+
+# Verify audit trail integrity
+python cli.py verify-audit
+
+# Launch the FastAPI REST server
+python cli.py serve --host 127.0.0.1 --port 8000
+```
+
+### CSV Batch Format
+
+The batch command accepts CSV files with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `task_id` | string | Unique task identifier |
+| `target_identifier` | string | Target entity or key |
+| `primary_metric` | float | Primary measurement value |
+| `secondary_metric` | float | Secondary measurement value |
+| `status_descriptor` | string | Status code (NOMINAL, DISCORDANT_ANOMALY, etc.) |
+| `is_critical_flag` | boolean | Critical escalation flag |
+
+Rows with invalid data are skipped with a warning.
+
+### REST API
+
+When running the server, the following endpoints are available:
+
+| Endpoint | Method | Description |
+|:---------|:-------|:------------|
+| `/health` | GET | Service health check |
+| `/metrics` | GET | Operational metrics |
+| `/api/audit` | POST | Submit a task for evaluation |
+| `/api/chat` | POST | Query the supervisor |
+| `/api/audit/logs` | GET | Retrieve audit trail |
+
+### Simulation
+
+Run high-throughput simulation benchmarks:
+
+```bash
+python simulator.py 1000
+```
+
+---
+
+## Security
+
+- **Zero-PHI Outbound Guard:** AST and regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers from leaving the system.
+- **HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition. Requires `AUDIT_SECRET_KEY` environment variable.
+- **PHI Redaction:** Automatic redaction of detected PHI patterns in outbound data.
+
+---
+
+## Testing
+
+```bash
+# Run the full test suite
 pytest -v
+
+# Run with coverage
+pytest -v --cov=agents --cov=pharmaco_screen --cov=enrichment
 ```
 
-Execute high-throughput batch simulation benchmarks:
-
-```bash
-python simulator.py --tasks 1000 --concurrency 8
-```
+Tests cover:
+- PHI guard enforcement
+- Specialized worker evaluations
+- Supervisor consensus and audit integrity
+- CLI command execution
+- Enrichment engine threshold escalation
 
 ---
 
-## 🐳 Container Deployment
+## Container Deployment
 
 ```bash
 docker build -t virtual-screening-pharmacophore .
-docker run -p 8000:8000 virtual-screening-pharmacophore
+docker run -e AUDIT_SECRET_KEY=<your-secret-key> -p 8000:8000 virtual-screening-pharmacophore
 ```
+
+Or with Docker Compose:
+
+```bash
+AUDIT_SECRET_KEY=<your-secret-key> docker-compose up
+```
+
+---
+
+## Project Structure
+
+```
+virtual-screening-pharmacophore/
+├── agents/                    # Clinical & Biomedical AI agent system
+│   ├── __init__.py
+│   ├── api.py                 # FastAPI REST server
+│   ├── base.py                # Security, PHI guard, audit trail
+│   ├── learning.py            # Bayesian calibration engine
+│   ├── llm_factory.py         # LLM provider factory
+│   ├── metrics.py             # Prometheus metrics collector
+│   ├── models.py              # Pydantic data models
+│   ├── streamer.py            # WebSocket telemetry broadcaster
+│   ├── supervisor.py          # Master orchestrator
+│   └── workers.py             # Specialized evaluation workers
+├── pharmaco_screen/           # 3D Pharmacophore screening engine
+│   ├── __init__.py
+│   ├── agents.py              # Sub-agents and coordinator
+│   ├── cli.py                 # CLI entry point
+│   ├── engine.py              # Core algorithmic engine
+│   ├── models.py              # Data models
+│   └── server.py              # FastAPI server factory
+├── tests/                     # Pytest test suite
+├── cli.py                     # Root CLI entry point
+├── enrichment.py              # Enrichment feature engines
+├── simulator.py               # High-throughput simulation
+├── pyproject.toml             # Project configuration
+├── Dockerfile                 # Container build
+└── docker-compose.yml         # Container orchestration
+```
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.

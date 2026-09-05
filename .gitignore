@@ -8,3 +8,13 @@ output.csv
 dist/
 build/
 *.egg-info/
+
+# Environment variables (may contain secrets)
+.env
+.env.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
