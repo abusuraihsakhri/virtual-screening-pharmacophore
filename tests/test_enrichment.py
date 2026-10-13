@@ -10,7 +10,7 @@ from enrichment import (
     MolecularVisualizationEngine,
     ImplementationEngine,
     DependenciesEngine,
-    TestingEngine,
+    TestingEngine as EnrichmentTestingEngine,
     FragmentBasedDrugDesignEngine,
     VirtualScreeningPharmacophoreEnrichmentSuite,
     EnrichmentResult,
@@ -49,7 +49,7 @@ def test_individual_engines():
         MolecularVisualizationEngine,
         ImplementationEngine,
         DependenciesEngine,
-        TestingEngine,
+        EnrichmentTestingEngine,
         FragmentBasedDrugDesignEngine,
     ]
     for cls in engines:

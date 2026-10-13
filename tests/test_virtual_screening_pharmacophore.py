@@ -8,11 +8,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-from agents.base import PHIGuard, AuditLogger, SecurityException
+from agents.base import PHIGuard, AuditLogger, AuditTrail, SecurityException
 from agents.models import SystemTaskPayload, UrgencyLevel, SystemIntegrityStatus
 from agents.workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from agents.supervisor import SystemSupervisor
 from cli import main
+from pydantic import ValidationError
 
 
 def test_phi_guard_enforcement():
@@ -63,3 +64,30 @@ def test_supervisor_consensus_and_audit():
     assert main(["audit", "--task-id", "CLI-TEST-01"]) == 0
     assert main(["chat", "Explain", "specifications"]) == 0
     assert main(["verify-audit"]) == 0
+
+
+def test_audit_integrity_detects_tampering():
+    trail = AuditTrail(secret_key="isolated-test-key")
+    trail.log("tester", "test", "created", {"status": "OK"})
+    trail.log("tester", "test", "completed", {"status": "OK"})
+    assert trail.verify_integrity()
+    snapshot = trail.get_trail()
+    snapshot[0]["payload_hash"] = "not-real"
+    assert trail.verify_integrity()  # snapshots do not expose mutable ledger records
+    trail.logs[0]["payload_hash"] = "tampered"
+    assert not trail.verify_integrity()
+
+
+def test_audit_integrity_detects_modified_signature():
+    trail = AuditTrail(secret_key="isolated-test-key")
+    trail.log("tester", "test", "created", {"status": "OK"})
+    trail.logs[0]["current_hash"] = "0" * 64
+    assert not trail.verify_integrity()
+
+
+def test_metrics_must_be_finite():
+    for bad in [float("nan"), float("inf"), -float("inf")]:
+        with pytest.raises(ValidationError):
+            SystemTaskPayload(task_id="INVALID", target_identifier="KEY", primary_metric=bad)
+        with pytest.raises(ValidationError):
+            SystemTaskPayload(task_id="INVALID", target_identifier="KEY", primary_metric=1, secondary_metric=bad)
