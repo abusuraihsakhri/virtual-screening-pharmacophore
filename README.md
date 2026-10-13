@@ -1,197 +1,94 @@
 # Virtual Screening Pharmacophore
 
-> **Domain:** Clinical Decision Support & Biomedical Computing / Computational Chemistry & AI Drug Discovery
+A Python demonstration of **rule-based task evaluation**, with an in-memory HMAC-SHA256 audit log, command-line and REST interfaces, and a standalone browser demo.
 
-<div align="center">
+**Scientific scope:** Despite the repository name, the current implementation does **not** build 3D pharmacophores, process molecular structures, perform conformer alignment, or screen chemical libraries. The thresholds and status keywords are illustrative rules, **not** validated clinical or pharmacological decision criteria.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Features
 
-</div>
+- Root system (`agents/` and `cli.py`): three rule-based workers (primary metric >25, secondary metric >12, descriptor keyword flags) with optional critical escalation, HMAC-signed in-memory audit entries and a pattern-based identifier guard.
+- Separate `pharmaco_screen/` CLI and API: demonstration threshold evaluator (primary >25 and secondary >10) returning alerts. It is not a molecular screening algorithm.
+- `enrichment.py`: five generic threshold evaluators; their names do not imply operational visualization, docking or fragment-screening capabilities.
+- `web/`: responsive static browser evaluator matching the root worker thresholds. Evaluation and JSON export run locally, without a server or cryptographic signing.
 
----
+## Browser demonstration
 
-## Overview
+Open `web/index.html` locally, or serve the `web/` directory with a static HTTP server. Enter identifiers, numerical metrics, a status descriptor, and optionally a critical flag. The output is a JSON rule-evaluation result. The browser UI does **not** call the backend or generate audit hashes.
 
-**Virtual Screening Pharmacophore** is a dual-domain analytical platform combining clinical decision support with 3D pharmacophore feature alignment and candidate library screening. The system provides:
+GitHub Pages deployment is configured in `.github/workflows/pages.yml`; a public live URL should be used only once Pages is enabled and the deployment is verified.
 
-- **Clinical & Biomedical AI** (`agents/`): Multi-worker evaluation with HMAC-SHA256 tamper-evident audit trails and Zero-PHI outbound protection.
-- **PharmacoScreen Engine** (`pharmaco_screen/`): 3D pharmacophore feature alignment and database screening agent following IUPAC Pharmacophore Modeling Guidelines.
-- **Enrichment Suite** (`enrichment.py`): Modular engines for visualization, implementation, dependencies, testing, and fragment-based drug design workflows.
+## Install
 
----
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.9+
-- pip
-
-### Installation
+Requires Python 3.9 or later.
 
 ```bash
-# Clone the repository
 git clone https://github.com/abusuraihsakhri/virtual-screening-pharmacophore.git
 cd virtual-screening-pharmacophore
-
-# Install in development mode
-pip install -e .
-
-# Or install with optional web server dependencies
-pip install -e ".[web]"
+python -m pip install -e ".[web,test]"
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
 ```
 
-### Environment Configuration
+On Windows PowerShell, set `$env:AUDIT_SECRET_KEY` to a securely generated random value. Do not commit secrets or reuse the former example key.
 
-The audit trail requires a secret key to be set:
+## Command-line usage
 
-```bash
-# Generate a secure key
-export AUDIT_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
-```
-
----
-
-## Usage
-
-### CLI Commands
-
-The package provides a unified CLI via `cli.py`:
+The root `cli.py` uses `agents/` and requires `AUDIT_SECRET_KEY` for audit operations:
 
 ```bash
-# Run a single audit evaluation
-python cli.py audit --task-id TASK-01 --target KEY-01 --primary 28.5 --secondary 14.2
-
-# Query the supervisory chat
-python cli.py chat "What is the system status?"
-
-# Batch process a CSV file
+python cli.py audit --task-id TASK-01 --target SAMPLE-01 --primary 29.4 --secondary 14.8
 python cli.py batch -i sample.csv -o results.csv
-
-# Verify audit trail integrity
+python cli.py chat "system status"
 python cli.py verify-audit
-
-# Launch the FastAPI REST server
 python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-### CSV Batch Format
-
-The batch command accepts CSV files with columns:
-
-| Column | Type | Description |
-|:-------|:-----|:------------|
-| `task_id` | string | Unique task identifier |
-| `target_identifier` | string | Target entity or key |
-| `primary_metric` | float | Primary measurement value |
-| `secondary_metric` | float | Secondary measurement value |
-| `status_descriptor` | string | Status code (NOMINAL, DISCORDANT_ANOMALY, etc.) |
-| `is_critical_flag` | boolean | Critical escalation flag |
-
-Rows with invalid data are skipped with a warning.
-
-### REST API
-
-When running the server, the following endpoints are available:
-
-| Endpoint | Method | Description |
-|:---------|:-------|:------------|
-| `/health` | GET | Service health check |
-| `/metrics` | GET | Operational metrics |
-| `/api/audit` | POST | Submit a task for evaluation |
-| `/api/chat` | POST | Query the supervisor |
-| `/api/audit/logs` | GET | Retrieve audit trail |
-
-### Simulation
-
-Run high-throughput simulation benchmarks:
+The installed console script instead invokes the **separate** `pharmaco_screen/` workflow:
 
 ```bash
-python simulator.py 1000
+virtual-screening-pharmacophore audit --task-id T1 --primary 20 --secondary 8
+virtual-screening-pharmacophore batch -i sample.csv -o results.csv
 ```
 
----
+The two interfaces currently use different secondary thresholds and result schemas. Avoid comparing their outputs as if they were interchangeable.
 
-## Security
+CSV files use `task_id,target_identifier,primary_metric,secondary_metric,is_critical_flag,status_descriptor` (see `sample.csv`). Invalid numerical rows are skipped by the batch command.
 
-- **Zero-PHI Outbound Guard:** AST and regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers from leaving the system.
-- **HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition. Requires `AUDIT_SECRET_KEY` environment variable.
-- **PHI Redaction:** Automatic redaction of detected PHI patterns in outbound data.
+## REST API
 
----
+Start the root server with `python cli.py serve`; its OpenAPI schema is available at `/docs` and it exposes `GET /health`, `GET /metrics`, `POST /api/audit`, `POST /api/chat`, and `GET /api/audit/logs`.
 
-## Testing
+The `pharmaco_screen.server.create_app()` factory provides a separate service with `/health`, `/api/audit`, and `/api/chat` when launched through its CLI.
+
+**Security boundary:** The root API has no authentication or rate limiting; bind it to a trusted local interface or place it behind appropriate controls. Audit records are kept **only in process memory**, so they disappear on restart. The identifier guard uses known regular-expression patterns and is **not** comprehensive PHI detection, de-identification, or a compliance guarantee. Never supply actual patient data. The `mock` chat implementation does not perform scientific validation.
+
+## Docker
 
 ```bash
-# Run the full test suite
-pytest -v
-
-# Run with coverage
-pytest -v --cov=agents --cov=pharmaco_screen --cov=enrichment
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+docker compose up --build
 ```
 
-Tests cover:
-- PHI guard enforcement
-- Specialized worker evaluations
-- Supervisor consensus and audit integrity
-- CLI command execution
-- Enrichment engine threshold escalation
+Compose requires the key to be supplied by the environment and binds the HTTP port to `127.0.0.1:8000` on the host. For deployments outside a trusted development machine, add authentication, transport security, appropriate access control, and durable logging.
 
----
-
-## Container Deployment
+## Tests
 
 ```bash
-docker build -t virtual-screening-pharmacophore .
-docker run -e AUDIT_SECRET_KEY=<your-secret-key> -p 8000:8000 virtual-screening-pharmacophore
+python -m pytest -q
+node --check web/app.js
+node tests/test_web.cjs
 ```
 
-Or with Docker Compose:
+GitHub Actions tests supported Python versions and checks the standalone browser rules. A local CI key is generated per job. No external molecular or machine-learning libraries are used; the browser demonstration requires a modern JavaScript-capable browser.
 
-```bash
-AUDIT_SECRET_KEY=<your-secret-key> docker-compose up
-```
+## Project layout
 
----
-
-## Project Structure
-
-```
-virtual-screening-pharmacophore/
-├── agents/                    # Clinical & Biomedical AI agent system
-│   ├── __init__.py
-│   ├── api.py                 # FastAPI REST server
-│   ├── base.py                # Security, PHI guard, audit trail
-│   ├── learning.py            # Bayesian calibration engine
-│   ├── llm_factory.py         # LLM provider factory
-│   ├── metrics.py             # Prometheus metrics collector
-│   ├── models.py              # Pydantic data models
-│   ├── streamer.py            # WebSocket telemetry broadcaster
-│   ├── supervisor.py          # Master orchestrator
-│   └── workers.py             # Specialized evaluation workers
-├── pharmaco_screen/           # 3D Pharmacophore screening engine
-│   ├── __init__.py
-│   ├── agents.py              # Sub-agents and coordinator
-│   ├── cli.py                 # CLI entry point
-│   ├── engine.py              # Core algorithmic engine
-│   ├── models.py              # Data models
-│   └── server.py              # FastAPI server factory
-├── tests/                     # Pytest test suite
-├── cli.py                     # Root CLI entry point
-├── enrichment.py              # Enrichment feature engines
-├── simulator.py               # High-throughput simulation
-├── pyproject.toml             # Project configuration
-├── Dockerfile                 # Container build
-└── docker-compose.yml         # Container orchestration
-```
-
----
+- `agents/`: Pydantic schemas, rule evaluators, coordinator, HMAC ledger and FastAPI routes
+- `pharmaco_screen/`: independent rule evaluator, CLI and REST server
+- `enrichment.py`: generic threshold wrappers
+- `web/`: static HTML and client-side JavaScript
+- `tests/`: Python and JavaScript regression tests
+- `Dockerfile`, `docker-compose.yml`, `.github/workflows/`: runtime and CI configuration
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
