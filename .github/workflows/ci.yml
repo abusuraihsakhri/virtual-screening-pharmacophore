@@ -35,4 +35,6 @@ jobs:
       - name: Audit chain smoke test
         run: python -c "from agents.base import AuditLogger; assert AuditLogger.verify_integrity()"
       - name: Validate static JavaScript
-        run: node --check web/app.js
+        run: |
+          node --check web/app.js
+          node tests/test_web.cjs
