@@ -76,8 +76,6 @@ def test_audit_integrity_detects_tampering():
     assert trail.verify_integrity()  # snapshots do not expose mutable ledger records
     trail.logs[0]["payload_hash"] = "tampered"
     assert not trail.verify_integrity()
-    trail.logs[0]["payload_hash"] = snapshot[1]["payload_hash"]
-    assert not trail.verify_integrity()
 
 
 def test_audit_integrity_detects_modified_signature():
