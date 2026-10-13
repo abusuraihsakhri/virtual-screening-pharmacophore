@@ -32,7 +32,7 @@ function evaluateMetrics(input) {
   };
 }
 
-(function () {
+if (typeof document !== "undefined") (function () {
   const form = document.getElementById("audit-form");
   const output = document.getElementById("result");
   const counter = document.getElementById("task-count");
@@ -82,3 +82,5 @@ function evaluateMetrics(input) {
     URL.revokeObjectURL(url);
   });
 })();
+
+if (typeof module !== "undefined") module.exports = { evaluateMetrics };
