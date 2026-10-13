@@ -1,13 +1,11 @@
-version: '3.8'
-
 services:
   virtual-screening-pharmacophore:
     build: .
     container_name: virtual-screening-pharmacophore
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
-      - AUDIT_SECRET_KEY=virtual-screening-pharmacophore-prod-audit-key-2026
+      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:?Set AUDIT_SECRET_KEY to a randomly generated secret}
       - MODEL_PROVIDER=mock
     restart: unless-stopped
     healthcheck:
