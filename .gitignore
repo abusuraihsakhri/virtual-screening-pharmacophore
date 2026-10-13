@@ -18,3 +18,10 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local development and coverage
+.venv/
+.coverage
+htmlcov/
+.env.*
+!.env.example
