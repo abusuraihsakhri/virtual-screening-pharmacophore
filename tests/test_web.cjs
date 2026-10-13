@@ -1,0 +1,15 @@
+"use strict";
+const assert = require("node:assert/strict");
+const { evaluateMetrics } = require("../web/app.js");
+const defaults = {task_id: "T1", target_identifier: "S1", primary_metric: 12, secondary_metric: 4, status_descriptor: "NOMINAL", is_critical_flag: false};
+let r = evaluateMetrics(defaults);
+assert.equal(r.overall_urgency, "ROUTINE");
+assert.equal(r.total_alerts, 0);
+assert.equal(r.audit_hash, null);
+r = evaluateMetrics({...defaults, primary_metric: 26, secondary_metric: 13, status_descriptor: "DISCORDANT"});
+assert.equal(r.overall_urgency, "ELEVATED_RISK");
+assert.equal(r.total_alerts, 3);
+r = evaluateMetrics({...defaults, is_critical_flag: true});
+assert.equal(r.overall_urgency, "CRITICAL_STAT_PANIC");
+assert.equal(r.critical_alerts_count, 1);
+console.log("Browser scoring rules: 3 checks passed");
