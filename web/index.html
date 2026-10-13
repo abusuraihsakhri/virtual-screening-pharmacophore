@@ -1,236 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Screening Pharmacophore — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Local rule-based numerical threshold evaluation demo.">
+  <title>Virtual Screening Pharmacophore — Rule Evaluation Demo</title>
+  <style>
+    :root {font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:dark;background:#0c111d;color:#ecf0f8}
+    *{box-sizing:border-box}
+    body{max-width:1160px;margin:0 auto;padding:2rem 1.25rem;line-height:1.5}
+    h1{font-size:clamp(1.5rem,3vw,2rem);margin:0}
+    h2{font-size:1.05rem;margin:0 0 1rem}
+    header{border-bottom:1px solid #384258;padding-bottom:1rem;margin-bottom:1.5rem}
+    p{color:#b9c4d6;margin:.5rem 0}
+    .note{background:#17243a;border:1px solid #405875;border-radius:9px;padding:.8rem 1rem;margin:1rem 0}
+    .layout{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1.15fr);gap:1.25rem}
+    .panel{background:#141e2f;border:1px solid #34435a;border-radius:12px;padding:1.25rem;min-width:0}
+    label{display:block;margin:.7rem 0 .25rem;color:#d7e0ec;font-size:.9rem}
+    input:not([type=checkbox]){display:block;width:100%;border-radius:6px;border:1px solid #64748b;background:#0a1424;color:#fff;padding:.65rem;font:inherit}
+    input:focus-visible,button:focus-visible{outline:3px solid #96c5ff;outline-offset:2px}
+    .check{display:flex;gap:.65rem;align-items:center;margin:1rem 0}
+    .check label{margin:0}
+    button{border:0;background:#327add;color:white;padding:.65rem 1rem;border-radius:7px;font-weight:650;font:inherit;cursor:pointer}
+    button:hover{background:#2466bd}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .small{font-size:.86rem;color:#b9c4d6}
+    pre{background:#08111f;border:1px solid #34435a;border-radius:8px;padding:1rem;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:530px;min-height:260px;font-size:.84rem}
+    [data-urgency="CRITICAL_STAT_PANIC"]{color:#ff9a9a}
+    [data-urgency="ELEVATED_RISK"]{color:#ffd391}
+    [data-urgency="ROUTINE"]{color:#8eeac2}
+    footer{font-size:.84rem;color:#b9c4d6;margin-top:1.25rem}
+    @media(max-width:750px){body{padding:1rem}.layout{grid-template-columns:1fr}.panel{padding:1rem}}
+  </style>
+  <script src="./app.js" defer></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Virtual Screening Pharmacophore</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Virtual Screening Pharmacophore Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "virtual-screening-pharmacophore",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+  <header>
+    <h1>Virtual Screening Pharmacophore</h1>
+    <p>Numerical threshold evaluator — local browser demonstration</p>
+  </header>
+  <div class="note" role="note">
+    <strong>Scope:</strong> This is a rule-based audit demonstration using fixed thresholds (primary &gt;25, secondary &gt;12).
+    It does not analyze molecules, pharmacophore features, clinical records, or actual chemical screening results.
+    Evaluation runs in this browser without server requests or a cryptographic audit trail.
+    Do not enter patient-identifiable data.
+  </div>
+  <main class="layout">
+    <section class="panel" aria-labelledby="inputs-heading">
+      <h2 id="inputs-heading">Input parameters</h2>
+      <form id="audit-form">
+        <label for="task_id">Task identifier</label>
+        <input id="task_id" type="text" maxlength="120" value="DEMO-001" required>
+        <label for="target_id">Target identifier</label>
+        <input id="target_id" type="text" maxlength="120" value="TARGET-001" required>
+        <label for="primary_metric">Primary metric</label>
+        <input id="primary_metric" type="number" step="any" value="29.4" required>
+        <label for="secondary_metric">Secondary metric</label>
+        <input id="secondary_metric" type="number" step="any" value="14.8" required>
+        <label for="status_descriptor">Status descriptor</label>
+        <input id="status_descriptor" type="text" maxlength="120" value="DISCORDANT_ANOMALY">
+        <div class="check"><input id="is_critical" type="checkbox"><label for="is_critical">Manual critical escalation flag</label></div>
+        <button type="submit">Evaluate parameters</button>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="output-heading">
+      <div class="toolbar">
+        <div><h2 id="output-heading">Evaluation result</h2><div class="small">Local evaluations: <span id="task-count">0</span> · <strong id="result-status" role="status" aria-live="polite">Not evaluated</strong></div></div>
+        <button type="button" id="download" disabled>Export JSON</button>
+      </div>
+      <pre id="result" aria-label="Evaluation JSON result">Enter parameters and select Evaluate parameters.</pre>
+    </section>
+  </main>
+  <footer>Results are deterministic demonstrations, not validated screening or clinical decisions. The Python CLI and API are separate backend workflows.</footer>
 </body>
 </html>
